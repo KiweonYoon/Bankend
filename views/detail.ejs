@@ -10,6 +10,7 @@
       integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
       crossorigin="anonymous"
     />
+
     <link rel="stylesheet" href="/public/main.css" />
   </head>
   <body>
@@ -53,47 +54,17 @@
         </div>
       </div>
     </nav>
-    <div class="container">
-      <ul class="list-group">
-        <% for (var i = 0; i < posts.length; i++){ %>
-        <li class="list-group-item">
-          <p>글 번호 : <%= posts[i]._id %></p>
-          <h4>할일 제목 : <%= posts[i].제목 %></h4>
-          <p>할일 마감날짜 : <%= posts[i].날짜 %></p>
-          <button class="btn btn-danger delete" data-id="<%= posts[i]._id%>">
-            삭제
-          </button>
-        </li>
-        <% } %>
-      </ul>
+    <div class="container mt-4">
+      <h4 class="text-center">상세페이지</h4>
+      <div class="card" style="width: 100%">
+        <div class="card-body">
+          <h5 class="card-title"><%= data.제목%></h5>
+          <h6 class="card-subtitle mb-2 text-muted"><%= data.날짜%></h6>
+          <p class="card-text"></p>
+          <a href="#" class="card-link">수정하기</a>
+        </div>
+      </div>
     </div>
-
-    <script
-      src="https://code.jquery.com/jquery-3.4.1.min.js"
-      integrity="어쩌구"
-      crossorigin="어쩌구"
-    ></script>
-
-    <script>
-      $('.delete').click((e) => {
-        console.log(e, 'eeeee');
-        var 글번호 = e.target.dataset.id;
-        var 지금누른거 = $(e.target);
-        $.ajax({
-          method: 'DELETE',
-          url: '/delete',
-          data: { _id: 글번호 },
-        })
-          .done((결과) => {
-            console.log('성공했어염!');
-            지금누른거.parent('li').fadeOut();
-          })
-          .fail((xhr, textStatus, errorThrown) => {
-            console.log(xhr, textStatus, errorThrown);
-          });
-      });
-    </script>
-
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
