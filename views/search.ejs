@@ -81,14 +81,11 @@
         <% for (var i = 0; i < posts.length; i++){ %>
         <li class="list-group-item">
           <p>글 번호 : <%= posts[i]._id %></p>
-          <p>작성자 : <%= posts[i].작성자 %></p>
           <h4>할일 제목 : <%= posts[i].제목 %></h4>
           <p>할일 마감날짜 : <%= posts[i].날짜 %></p>
-          <% if ( user && user._id.toString() == posts[i].작성자) { %>
           <button class="btn btn-danger delete" data-id="<%= posts[i]._id%>">
             삭제
           </button>
-          <% } %>
         </li>
         <% } %>
       </ul>

@@ -36,47 +36,27 @@ app.get('/write', (req, res) => {
   res.sendFile(__dirname + '/write.html');
 });
 
-app.post('/add', (req, res) => {
-  res.send('전송완료');
-  console.log(req.body);
-  db.collection('counter').findOne({ name: '게시물갯수' }, (error, result) => {
-    console.log(result.totalPost);
-    const 총게시물갯수 = result.totalPost;
-    db.collection('post').insertOne(
-      { _id: 총게시물갯수 + 1, 제목: req.body.title, 날짜: req.body.date },
-      (에러, 결과) => {
-        console.log('저장완료');
-        db.collection('counter').updateOne(
-          //.updateOne({어떤데이터를 수정할지},{수정 값},function(){})
-          { name: '게시물갯수' },
-          { $inc: { totalPost: 1 } },
-          (에러, 결과) => {
-            if (에러) {
-              return console.log(에러);
-            }
-          }
-        );
-      }
-    );
-  });
-});
-
-app.get('/list', (req, res) => {
+app.get('/search', (req, res) => {
+  var 검색조건 = [
+    {
+      $search: {
+        index: 'titleSearch',
+        text: {
+          query: req.query.value,
+          path: ['제목', '날짜'], // 제목날짜 둘다 찾고 싶으면 ['제목', '날짜']
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+    { $limit: 10 },
+    { $project: { 제목: 1, _id: 1, 날짜: 1, score: { $meta: 'searchScore' } } },
+  ];
   db.collection('post')
-    .find()
+    .aggregate(검색조건)
     .toArray((에러, 결과) => {
-      res.render('list.ejs', { posts: 결과 });
       console.log(결과);
+      res.render('search.ejs', { posts: 결과 });
     });
-});
-
-app.delete('/delete', (req, res) => {
-  console.log(req.body); //요청시 요청자가 함께 보낸 데이터 확인
-  req.body._id = parseInt(req.body._id); //정수로 변환
-  db.collection('post').deleteOne(req.body, (에러, 결과) => {
-    console.log('삭제완료');
-    res.status(200).send({ message: '성공했습니다.' });
-  });
 });
 
 app.get('/detail/:id', (req, res) => {
@@ -123,6 +103,7 @@ app.use(passport.session());
 app.get('/login', (req, res) => {
   res.render('login.ejs');
 });
+
 app.post(
   '/login',
   passport.authenticate('local', {
@@ -132,6 +113,7 @@ app.post(
     res.redirect('/');
   }
 );
+
 app.get('/mypage', 로그인했니, (req, res) => {
   console.log(req.user);
   res.render('mypage.ejs', { 사용자: req.user });
@@ -181,3 +163,64 @@ passport.deserializeUser((아이디, done) => {
     done(null, 결과);
   });
 });
+
+app.post('/register', (req, res) => {
+  db.collection('login').insertOne(
+    { id: req.body.id, pw: req.body.pw },
+    (에러, 결과) => {
+      res.redirect('/');
+    }
+  );
+});
+
+app.post('/add', (req, res) => {
+  res.send('전송완료');
+  console.log(req.body);
+  db.collection('counter').findOne({ name: '게시물갯수' }, (error, result) => {
+    console.log(result.totalPost);
+    const 총게시물갯수 = result.totalPost;
+    const 저장할거 = {
+      _id: 총게시물갯수 + 1,
+      작성자: req.user._id,
+      제목: req.body.title,
+      날짜: req.body.date,
+    };
+    db.collection('post').insertOne(저장할거, (에러, 결과) => {
+      console.log('저장완료');
+      db.collection('counter').updateOne(
+        //.updateOne({어떤데이터를 수정할지},{수정 값},function(){})
+        { name: '게시물갯수' },
+        { $inc: { totalPost: 1 } },
+        (에러, 결과) => {
+          if (에러) {
+            return console.log(에러);
+          }
+        }
+      );
+    });
+  });
+});
+
+app.get('/list', (req, res) => {
+  db.collection('post')
+    .find()
+    .toArray((에러, 결과) => {
+      res.render('list.ejs', { posts: 결과, user: req.user });
+      console.log(결과);
+      console.log(req.user._id, 'req!!');
+    });
+});
+
+app.delete('/delete', (req, res) => {
+  console.log(req.body); //요청시 요청자가 함께 보낸 데이터 확인
+  req.body._id = parseInt(req.body._id); //정수로 변환
+  const 삭제할데이터 = { _id: req.body._id, 작성자: req.user._id }; //req.body._id번호를 갖는 게시물을 req.user_id인 사람만 삭제
+  db.collection('post').deleteOne(삭제할데이터, (에러, 결과) => {
+    console.log('삭제완료');
+    res.status(200).send({ message: '성공했습니다.' });
+  });
+});
+
+app.use('/shop', require('./routes/shop.js'));
+
+app.use('/board/sub', require('./routes/board.js'));
